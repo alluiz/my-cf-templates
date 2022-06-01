@@ -1,0 +1,97 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Resources:
+
+  MyQueueKMSKey:
+    Type: AWS::KMS::Key
+    Properties: 
+      Description: Chave de cripgtografia para fila SQS
+      Enabled: true
+      EnableKeyRotation: true
+      KeyPolicy: >
+        { 
+          "Statement": 
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": "arn:aws:iam::707626025484:root"
+            },
+            "Action": "kms:*",
+            "Resource": "*"
+          }
+        }
+      # KeySpec: String
+      # KeyUsage: String
+      MultiRegion: false
+      PendingWindowInDays: 30
+      # Tags:
+      #   - Tag
+
+  MyDLQ:
+    Type: AWS::SQS::Queue
+    Properties: 
+      ContentBasedDeduplication: true
+      # DeduplicationScope: queue
+      # DelaySeconds: Integer
+      FifoQueue: true
+      # FifoThroughputLimit: String
+      KmsDataKeyReusePeriodSeconds: 3600
+      KmsMasterKeyId: !Ref MyQueueKMSKey
+      # MaximumMessageSize: Integer
+      MessageRetentionPeriod: 345600 #4 days
+      QueueName: MyDLQ.fifo
+      ReceiveMessageWaitTimeSeconds: 20
+      # Se usarmos mais de uma fila podemos ter apenas uma DLQ
+      RedriveAllowPolicy:
+      	redrivePermission: allowAll
+      # RedrivePolicy: Json
+      # SqsManagedSseEnabled: Boolean
+      # Tags: 
+      #   - Tag
+      VisibilityTimeout: 120
+  
+  MyQueue:
+    Type: AWS::SQS::Queue
+    Properties: 
+      ContentBasedDeduplication: true
+      # DeduplicationScope: queue
+      # DelaySeconds: Integer
+      FifoQueue: true
+      # FifoThroughputLimit: String
+      KmsDataKeyReusePeriodSeconds: 3600
+      KmsMasterKeyId: !Ref MyQueueKMSKey
+      # MaximumMessageSize: Integer
+      MessageRetentionPeriod: 604800 #7 days
+      QueueName: MyQueue.fifo
+      ReceiveMessageWaitTimeSeconds: 20
+      # Se usarmos mais de uma fila podemos ter apenas uma DLQ
+      RedrivePolicy: 
+        deadLetterTargetArn:
+          Fn::GetAtt: 
+            - "MyDLQ"
+            - "Arn"
+        maxReceiveCount: 3
+      # SqsManagedSseEnabled: Boolean
+      # Tags: 
+      #   - Tag
+      VisibilityTimeout: 120
+
+  SampleSQSPolicy: 
+    Type: AWS::SQS::QueuePolicy
+    Properties: 
+      Queues: 
+        - !Ref MyQueue
+      PolicyDocument: 
+        Statement: 
+          - Action: 
+              - "SQS:SendMessage" 
+              - "SQS:ReceiveMessage"
+              - "SQS:DeleteMessage"
+            Effect: "Allow"
+            Resource:
+              Fn::GetAtt: 
+                - "MyQueue"
+                - "Arn"
+            Principal:  
+              AWS: 
+                - "707626025484"
