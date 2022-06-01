@@ -9,12 +9,12 @@ Resources:
       Enabled: true
       EnableKeyRotation: true
       KeyPolicy:
-        Statement: 
+        Statement:
           Effect: Allow
           Principal:
             AWS: arn:aws:iam::707626025484:root
-          Action: kms:*,
-          Resource: *
+          Action: kms:*
+          Resource: "*"
       # KeySpec: String
       # KeyUsage: String
       MultiRegion: false
@@ -38,8 +38,7 @@ Resources:
       ReceiveMessageWaitTimeSeconds: 20
       # Se usarmos mais de uma fila podemos ter apenas uma DLQ
       RedriveAllowPolicy:
-      	redrivePermission: allowAll
-      # RedrivePolicy: Json
+        redrivePermission: allowAll
       # SqsManagedSseEnabled: Boolean
       # Tags: 
       #   - Tag
