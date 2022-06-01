@@ -8,18 +8,13 @@ Resources:
       Description: Chave de cripgtografia para fila SQS
       Enabled: true
       EnableKeyRotation: true
-      KeyPolicy: >
-        { 
-          "Statement": 
-          {
-            "Effect": "Allow",
-            "Principal": {
-              "AWS": "arn:aws:iam::707626025484:root"
-            },
-            "Action": "kms:*",
-            "Resource": "*"
-          }
-        }
+      KeyPolicy:
+        Statement: 
+          Effect: Allow
+          Principal:
+            AWS: arn:aws:iam::707626025484:root
+          Action: kms:*,
+          Resource: *
       # KeySpec: String
       # KeyUsage: String
       MultiRegion: false
@@ -66,10 +61,7 @@ Resources:
       ReceiveMessageWaitTimeSeconds: 20
       # Se usarmos mais de uma fila podemos ter apenas uma DLQ
       RedrivePolicy: 
-        deadLetterTargetArn:
-          Fn::GetAtt: 
-            - "MyDLQ"
-            - "Arn"
+        deadLetterTargetArn: !GetAtt MyDLQ.Arn
         maxReceiveCount: 3
       # SqsManagedSseEnabled: Boolean
       # Tags: 
